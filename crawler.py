@@ -45,6 +45,38 @@ def get_topics_title():
 mainWrapper = get_wrapper()
 debatesContainer = mainWrapper.find_element(*debates_locator)
 
-visit_debates_forum()
+# visit_debates_forum()
+
+# TODO: paginacao
+# tratar posts inválidos
+def getTopicData(url):
+  driver.get(url)
+  print(url)
+  topicData = dict()
+  topicData['title'] = driver.find_element(By.CLASS_NAME, 'topic-title').text
+  topicData['category']  = driver.find_element(By.ID, 'nav-breadcrumbs').text.replace("\n", ">")
+  topicData['posts'] = []
+
+  posts = driver.find_elements(By.CLASS_NAME, 'postbody')
+  for post in posts:
+    postdata = dict()
+    authorElement = post.find_element(By.CLASS_NAME, 'author')
+    authorNameElement = authorElement.find_element(By.TAG_NAME, 'strong')
+    authorULR = authorNameElement.find_element(By.TAG_NAME, 'a').get_attribute('href')
+    postDateTime = authorElement.find_element(By.TAG_NAME, 'time').get_attribute('datetime')
+    content = post.find_element(By.CLASS_NAME, 'content')
+    
+    postdata['author'] = authorNameElement.text
+    postdata['authorProfile'] = authorULR
+    postdata['postDateTime'] = postDateTime
+    # postdata['content'] = content.get_attribute('innerHTML')
+    topicData['posts'].append(postdata) 
+
+  return topicData
+
+# TODO: parar loop no ultimo post
+for pageNumber in range(1,5):
+  pageUrl = "https://clubeceticismo.com.br/viewtopic.php?t="+str(pageNumber)
+  print(getTopicData(pageUrl))
 
 driver.close()
