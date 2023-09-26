@@ -4,6 +4,8 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
+import csv
+
 chrome_options = Options()
 # chrome_options.add_argument("--headless")
 chrome_options.add_argument("--window-size=1920x1080")
@@ -22,6 +24,12 @@ topics_locator = (By.CLASS_NAME,'forumbg')
 forum_title_locator = (By.CLASS_NAME,'forumtitle')
 topic_title_locator = (By.CLASS_NAME,'topictitle')
 
+csvFile = open('clubeceticismo_data.csv', 'w', newline='', encoding='utf-8')
+writer = csv.writer(csvFile)
+
+def csv_writer(data):
+  writer.writerow(data)
+
 def get_wrapper():
   return driver.find_element(By.ID,'wrap')
   
@@ -29,22 +37,21 @@ def visit_debates_forum():
   allTags = debatesContainer.find_elements(*forum_title_locator)
   for tag in allTags:
     tag.click()
-    wait = WebDriverWait(driver, 10)
-    forumTitle = wait.until(EC.element_to_be_clickable((By.CLASS_NAME, 'forum-title')))
-    print(forumTitle.text)
     get_topics_title()
     driver.back()
     
 def get_topics_title():
   newWrapper = get_wrapper()
+  forumTitle = newWrapper.find_element(By.CLASS_NAME, 'forum-title')
   topicsContainer = newWrapper.find_element(*topics_locator)
   allTags = topicsContainer.find_elements(*topic_title_locator)
   for tag in allTags:
-    print(tag.text)
+    csv_writer([tag.text, forumTitle.text])
   
 mainWrapper = get_wrapper()
 debatesContainer = mainWrapper.find_element(*debates_locator)
 
 visit_debates_forum()
 
+csvFile.close()
 driver.close()
