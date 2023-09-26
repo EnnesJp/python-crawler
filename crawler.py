@@ -6,6 +6,9 @@ from selenium.webdriver.support import expected_conditions as EC
 
 import csv
 
+import time
+from time import sleep 
+
 chrome_options = Options()
 chrome_options.add_argument("--headless")
 chrome_options.add_argument("--window-size=1920x1080")
@@ -17,7 +20,7 @@ driver.get("https://clubeceticismo.com.br")
 
 assert "No results found." not in driver.page_source
 
-print(driver.title)
+print(driver.title, '\n')
 
 debates_locator = (By.CLASS_NAME,'category-4')
 topics_locator = (By.CLASS_NAME,'forumbg')
@@ -36,9 +39,11 @@ def get_wrapper():
 def visit_debates_forum():
   allDebates = debatesContainer.find_elements(*forum_title_locator)
   for debate in allDebates:
+    print('Visiting debate "', debate.text, '"\n')
     debate.click()
     visit_topics()
     driver.back()
+    time.sleep(2)
     
 def visit_topics():
   debatesWrapper = get_wrapper()
@@ -46,9 +51,11 @@ def visit_topics():
   topicsContainer = debatesWrapper.find_element(*topics_locator)
   allTopics = topicsContainer.find_elements(*topic_title_locator)
   for topic in allTopics:
+    print('Visiting topic "', topic.text, '"\n')
     topic.click()
     get_topics_data(forumTitle)
     driver.back()
+    time.sleep(2)
 
 # TODO: paginacao
 # tratar posts inválidos
@@ -58,7 +65,8 @@ def get_topics_data(forumTitle):
   topicTitle = topicsWrapper.find_element(By.CLASS_NAME, 'topic-title')
   posts = topicsWrapper.find_elements(By.CLASS_NAME, 'postbody')
   
-  for post in posts:
+  for index, post in enumerate(posts):
+    print('Getting topic ', index, ' data\n')
     authorElement = post.find_element(By.CLASS_NAME, 'author')
     authorNameElement = authorElement.find_element(By.TAG_NAME, 'strong')
     authorURL = authorNameElement.find_element(By.TAG_NAME, 'a').get_attribute('href')
@@ -82,6 +90,7 @@ def get_topics_data(forumTitle):
 mainWrapper = get_wrapper()
 debatesContainer = mainWrapper.find_element(*debates_locator)
 
+print("Init crawling...\n")
 visit_debates_forum()
 
 csvFile.close()
