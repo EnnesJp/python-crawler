@@ -54,7 +54,11 @@ def visit_debates_forum():
       print("Invalid Link")
 
 def visit_topics():
+  global currentTopic
   debatesWrapper = get_wrapper()
+  nextPage = debatesWrapper.find_elements(By.CLASS_NAME, 'arrow.next')
+  if nextPage:
+    nextPageUrl = nextPage[0].find_element(By.TAG_NAME,'a').get_attribute("href")
   forumTitle = debatesWrapper.find_element(By.CLASS_NAME, 'forum-title').text
   topicsContainer = debatesWrapper.find_element(*topics_locator)
   allTopics = topicsContainer.find_elements(*topic_title_locator)
@@ -69,6 +73,9 @@ def visit_topics():
       currentTopic = currentTopic + 1
     else:
       print("Invalid Link")
+  if nextPage:
+    driver.get(nextPageUrl)
+    visit_topics()
 
 def get_topics_data(forumTitle, previousIndex = 0):
   url = driver.current_url
