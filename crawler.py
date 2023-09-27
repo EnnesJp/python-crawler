@@ -27,6 +27,7 @@ debates_locator = (By.CLASS_NAME,'category-4')
 topics_locator = (By.CLASS_NAME,'forumbg')
 forum_title_locator = (By.CLASS_NAME,'forumtitle')
 topic_title_locator = (By.CLASS_NAME,'topictitle')
+currentTopic = 1
 
 wait = WebDriverWait(driver, 10)
 
@@ -51,7 +52,7 @@ def visit_debates_forum():
       visit_topics()
     else:
       print("Invalid Link")
-    
+
 def visit_topics():
   debatesWrapper = get_wrapper()
   forumTitle = debatesWrapper.find_element(By.CLASS_NAME, 'forum-title').text
@@ -65,12 +66,11 @@ def visit_topics():
       driver.get(link)
       time.sleep(3)
       get_topics_data(forumTitle)
+      currentTopic = currentTopic + 1
     else:
       print("Invalid Link")
 
-# TODO: paginacao
-# tratar posts inválidos
-def get_topics_data(forumTitle):
+def get_topics_data(forumTitle, previousIndex = 0):
   url = driver.current_url
   topicsWrapper = get_wrapper()
   
@@ -78,29 +78,35 @@ def get_topics_data(forumTitle):
   wait.until(lambda d : driver.find_element(By.CLASS_NAME, "page-body"))	
   
   topicTitle = topicsWrapper.find_element(By.CLASS_NAME, 'topic-title')
-  posts = topicsWrapper.find_elements(By.CLASS_NAME, 'postbody')
+  posts = topicsWrapper.find_elements(By.CLASS_NAME, 'post')
   
   for index, post in enumerate(posts):
-    print('Getting post', index+1, 'data\n')
+    print('Getting post', index+previousIndex+1, 'data\n')
     authorElement = post.find_element(By.CLASS_NAME, 'author')
     authorNameElement = authorElement.find_element(By.TAG_NAME, 'strong')
     authorURL = authorNameElement.find_element(By.TAG_NAME, 'a').get_attribute('href')
+    authorTotalMessages= post.find_element(By.CLASS_NAME,'profile-posts').find_element(By.TAG_NAME, 'a')
     postDateTime = authorElement.find_element(By.TAG_NAME, 'time').get_attribute('datetime')
     content = post.find_element(By.CLASS_NAME, 'content')
     
     csvData = [
-      content.get_attribute('innerHTML'),
-      authorNameElement.text,
-      authorURL,
-      postDateTime,
+      currentTopic,
+      index + previousIndex,
       topicTitle.text,
       forumTitle,
-      url
+      url,
+      authorNameElement.text,
+      authorURL,
+      authorTotalMessages.text,
+      postDateTime,
+      content.get_attribute('innerHTML')
     ]
-    
     csv_writer(csvData)
-    
-  
+
+  nextPage = topicsWrapper.find_elements(By.CLASS_NAME, 'arrow.next')
+  if nextPage:
+    nextPage[0].click()
+    get_topics_data(forumTitle, previousIndex + 50)
   
 mainWrapper = get_wrapper()
 debatesContainer = mainWrapper.find_element(*debates_locator)
