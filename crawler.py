@@ -31,7 +31,7 @@ currentTopic = 1
 
 wait = WebDriverWait(driver, 10)
 
-csvFile = open('clubeceticismo_data.csv', 'w', newline='', encoding='utf-8')
+csvFile = open('clubeceticismo_dataset.csv', 'w', newline='', encoding='utf-8')
 writer = csv.writer(csvFile)
 
 def csv_writer(data):
@@ -44,6 +44,7 @@ def visit_debates_forum():
   allDebates = debatesContainer.find_elements(*forum_title_locator)
   debateTitles = [debate.text for debate in allDebates]
   debateLinks = [debate.get_attribute("href") for debate in allDebates]
+  
   for index, link in enumerate(debateLinks):
     if("https://clubeceticismo.com.br/" in link):
       print('Visiting debate "', debateTitles[index], '"\n')
@@ -53,17 +54,22 @@ def visit_debates_forum():
     else:
       print("Invalid Link")
 
-def visit_topics():
+def visit_topics(page = 1):
+  print("Getting debate page", page, "\n")
+  
   global currentTopic
   debatesWrapper = get_wrapper()
   nextPage = debatesWrapper.find_elements(By.CLASS_NAME, 'arrow.next')
+  
   if nextPage:
     nextPageUrl = nextPage[0].find_element(By.TAG_NAME,'a').get_attribute("href")
+    
   forumTitle = debatesWrapper.find_element(By.CLASS_NAME, 'forum-title').text
   topicsContainer = debatesWrapper.find_element(*topics_locator)
   allTopics = topicsContainer.find_elements(*topic_title_locator)
   topicTitles = [topic.text for topic in allTopics]
   topicLinks = [topic.get_attribute("href") for topic in allTopics]
+  
   for index, link in enumerate(topicLinks):
     if("https://clubeceticismo.com.br/" in link):
       print('Visiting topic "', topicTitles[index], '"\n')
@@ -73,11 +79,14 @@ def visit_topics():
       currentTopic = currentTopic + 1
     else:
       print("Invalid Link")
+      
   if nextPage:
     driver.get(nextPageUrl)
-    visit_topics()
+    visit_topics(page + 1)
 
-def get_topics_data(forumTitle, previousIndex = 0):
+def get_topics_data(forumTitle, previousIndex = 0, page = 1):
+  print("Getting topic page", page, "\n")
+  
   url = driver.current_url
   topicsWrapper = get_wrapper()
   
@@ -112,8 +121,9 @@ def get_topics_data(forumTitle, previousIndex = 0):
 
   nextPage = topicsWrapper.find_elements(By.CLASS_NAME, 'arrow.next')
   if nextPage:
+    
     nextPage[0].click()
-    get_topics_data(forumTitle, previousIndex + 50)
+    get_topics_data(forumTitle, previousIndex + 50, page + 1)
   
 mainWrapper = get_wrapper()
 debatesContainer = mainWrapper.find_element(*debates_locator)
