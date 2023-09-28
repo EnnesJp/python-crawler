@@ -66,10 +66,13 @@ def visit_topics(page = 1):
   forumsWrapper = get_wrapper()
   forumTitle = forumsWrapper.find_element(By.CLASS_NAME, 'forum-title').text
   topicsContainer = forumsWrapper.find_element(*body_locator)
-  nextPage = topicsContainer.find_elements(*next_page_locator)
   allTopics = topicsContainer.find_elements(*topic_title_locator)
   topicTitles = [topic.text for topic in allTopics]
   topicLinks = [topic.get_attribute("href") for topic in allTopics]
+  
+  nextPage = topicsContainer.find_elements(*next_page_locator)
+  if nextPage:
+    nextPageUrl = nextPage[0].find_element(By.TAG_NAME,'a').get_attribute("href")
   
   for index, link in enumerate(topicLinks):
     if(check_valid_link(link)):
@@ -80,7 +83,6 @@ def visit_topics(page = 1):
       currentTopic = currentTopic + 1
 
   if nextPage:
-    nextPageUrl = nextPage[0].find_element(By.TAG_NAME,'a').get_attribute("href")
     driver.get(nextPageUrl)
     visit_topics(page + 1)
 
